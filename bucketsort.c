@@ -13,13 +13,18 @@ Authors: Michael Franklin michaelfranklin@sandiego.edu
 void mergeSortSerial(int l, int r, long * arr, long * temp);
 void merge(int l, int lm, int m, int r, long * arr, long * temp);
 void validateSerialSort(int array_size, long * array);
-void validateParallelSort(int array_size, long * arraySerial, long * arrayParallel)
+void validateParallelSort(int array_size, long * arraySerial, long * arrayParallel);
 
 int main(void) {
 
 //  intialize variables
 	int my_rank, comm_size, arr_size;
 	long * arrSerial, * arrParallel, * temp;
+	struct timeval tv1, tv2;
+	double serialTime, parallelTime;
+
+
+
 // Start MPI implementation 
 	MPI_Init(NULL, NULL);
 	MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
@@ -42,14 +47,12 @@ int main(void) {
 		}
 		// fills arrays with same random numbers
 		
-		// For timing
-   		struct timeval  tv1, tv2;
 
     		// Sort with serial code
     		gettimeofday(&tv1, NULL); // start serial timing
 		mergeSortSerial(0, arr_size - 1, arrSerial, temp);
     		gettimeofday(&tv2, NULL); // stop serial timing
-    		double serialTime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec);
+    		serialTime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec);
 		
 		//validate sort
 		validateSerialSort(arr_size, arrSerial);
@@ -65,17 +68,17 @@ int main(void) {
 	if(my_rank == 0) {
 
 		gettimeofday(&tv2, NULL); //stop parallel timing
-    		double parallelTime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec);
+    		parallelTime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec);
 
 		
 		validateParallelSort(arr_size, arrSerial, arrParallel);		
 		//process 0 validates arrParallel with arrSerial
 
 		// Print results.
-    		printf("Number of Processes = %d\nArray Size = %d\nSerial time = %e\n", threadCount, arr_size, serialTime);
+    		printf("Number of Processes = %d\nArray Size = %d\nSerial time = %e\n", comm_size, arr_size, serialTime);
     		printf("Parallel time = %e\n", parallelTime);
     		double speedup = serialTime / parallelTime;
-    		double efficiency = speedup / threadCount;
+    		double efficiency = speedup / comm_size;
     		printf("Speedup = %e\n", speedup);
     		printf("Efficiency = %e\n", efficiency);
 	}
