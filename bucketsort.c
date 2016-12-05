@@ -1,7 +1,7 @@
 /* BucketSort 
 
-Authors: Michael Franklin
-	 Erin McDonald
+Authors: Michael Franklin michaelfranklin@sandiego.edu
+	 Erin McDonald erinmcdonald@sandiego.edu
 
 */
 #include <sys/time.h>
@@ -12,7 +12,8 @@ Authors: Michael Franklin
 
 void mergeSortSerial(int l, int r, long * arr, long * temp);
 void merge(int l, int lm, int m, int r, long * arr, long * temp);
-void validateSort(int array_size, long * array);
+void validateSerialSort(int array_size, long * array);
+void validateParallelSort(int array_size, long * arraySerial, long * arrayParallel)
 
 int main(void) {
 
@@ -45,23 +46,39 @@ int main(void) {
    		struct timeval  tv1, tv2;
 
     		// Sort with serial code
-    		gettimeofday(&tv1, NULL); // start timing
+    		gettimeofday(&tv1, NULL); // start serial timing
 		mergeSortSerial(0, arr_size - 1, arrSerial, temp);
-    		gettimeofday(&tv2, NULL); // stop timing
+    		gettimeofday(&tv2, NULL); // stop serial timing
     		double serialTime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec);
 		
 		//validate sort
-		validateSort(arr_size, arrSerial);
+		validateSerialSort(arr_size, arrSerial);
 		
+		gettimeofday(&tv1, NULL); //start parallel timing
+
+
 		//TODO block distribute arrParallel
 	}//end if statement for process 0
 
 	//TODO implement sorting algorithm
 
-	//TODO process 0 validates arrParallel with arrSerial
+	if(my_rank == 0) {
 
-	//TODO print ending data
+		gettimeofday(&tv2, NULL); //stop parallel timing
+    		double parallelTime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec);
+
 		
+		validateParallelSort(arr_size, arrSerial, arrParallel);		
+		//process 0 validates arrParallel with arrSerial
+
+		// Print results.
+    		printf("Number of Processes = %d\nArray Size = %d\nSerial time = %e\n", threadCount, arr_size, serialTime);
+    		printf("Parallel time = %e\n", parallelTime);
+    		double speedup = serialTime / parallelTime;
+    		double efficiency = speedup / threadCount;
+    		printf("Speedup = %e\n", speedup);
+    		printf("Efficiency = %e\n", efficiency);
+	}
 
 	return 0;
 }
@@ -110,7 +127,7 @@ void merge(int l, int lm, int m, int r, long * arr, long * temp){
 
 } /* merge */
 
-void validateSort(int array_size, long * array) {
+void validateSerialSort(int array_size, long * array) {
 	int i;
 	for(i = 0; i < array_size - 2; i++) {
 		if(array[i] > array[i+1]) {
@@ -121,3 +138,18 @@ void validateSort(int array_size, long * array) {
 	printf("Array is sorted");
 	return;
 }
+
+void validateParallelSort(int array_size, long * arraySerial, long * arrayParallel) {
+	int i;
+	for(i = 0; i < array_size; i++) {
+		if(arraySerial[i] != arrayParallel[i]) {
+			printf("Array is not sorted correctly");
+			return;
+		}
+	}
+	printf("Sorted parallel array matches sorted serial array");
+	return;
+}
+
+
+
