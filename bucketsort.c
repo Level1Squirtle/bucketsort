@@ -1,4 +1,7 @@
-/* BucketSort 
+/* 
+
+
+Distributed Memory Parallel BucketSort 
 
 Authors: Michael Franklin michaelfranklin@sandiego.edu
 	 Erin McDonald erinmcdonald@sandiego.edu
@@ -18,8 +21,8 @@ void validateParallelSort(int array_size, long * arraySerial, long * arrayParall
 int main(void) {
 
 //  intialize variables
-	int my_rank, comm_size, arr_size;
-	long * arrSerial, * arrParallel, * temp;
+	int my_rank, comm_size, arr_size, s;
+	long * arrSerial, * arrParallel, * temp, * samples;
 	struct timeval tv1, tv2;
 	double serialTime, parallelTime;
 
@@ -33,7 +36,7 @@ int main(void) {
 	if(my_rank == 0) {
 		printf("Please enter an array size:");
 		arr_size = 0;
-		scanf("%d", arr_size);
+		scanf("%d", &arr_size);
 		// gets size of the array from standard input
 		arrSerial = malloc(sizeof(long)*arr_size);
 		arrParallel = malloc(sizeof(long)*arr_size);
@@ -60,7 +63,22 @@ int main(void) {
 		gettimeofday(&tv1, NULL); //start parallel timing
 
 
+
 		//TODO block distribute arrParallel
+
+
+
+		s = 10 * comm_size * (log(arr_size)/log(2));//computes the size of the sample array
+		
+		samples = malloc(sizeof(long)*s);//allocates samples, now that we have the size
+
+		for(i = 0; i < s; i++) {
+			samples[i] = arrParallel[srand(time(NULL)) % arr_size];
+		}//assigns samples random values from arrParallel
+
+
+
+		
 	}//end if statement for process 0
 
 	//TODO implement sorting algorithm
@@ -81,10 +99,26 @@ int main(void) {
     		double efficiency = speedup / comm_size;
     		printf("Speedup = %e\n", speedup);
     		printf("Efficiency = %e\n", efficiency);
-	}
+	}//end if statement for process 0
+
+	MPI_Finalize();
 
 	return 0;
 }
+
+
+void distributeArray(??) {
+//TODO Implement somehow
+}
+
+void choosePivots(??) {
+//TODO implement somehow
+}
+
+void
+
+
+
 
 void mergeSortSerial(int l, int r, long * arr, long * temp){
     int m;
@@ -150,7 +184,6 @@ void validateParallelSort(int array_size, long * arraySerial, long * arrayParall
 			return;
 		}
 	}
-	printf("Sorted parallel array matches sorted serial array");
 	return;
 }
 
