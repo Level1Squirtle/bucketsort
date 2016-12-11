@@ -13,6 +13,8 @@ Authors: Michael Franklin michaelfranklin@sandiego.edu
 #include <string.h>
 #include <mpi.h>
 
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+
 void mergeSortSerial(int l, int r, long * arr, long * temp);
 void merge(int l, int lm, int m, int r, long * arr, long * temp);
 void validateSerialSort(int array_size, long * array);
@@ -51,7 +53,10 @@ int main(void) {
 			arrParallel[i] = arrSerial[i];
 		}
 		// fills arrays with same random numbers
-		
+		printf("\nSerially sorted: \n");
+   		for(i=0; i<arraySize; i++){
+			printf("%d |", vecSerial[i]);
+    		}
 
     		// Sort with serial code
     		gettimeofday(&tv1, NULL); // start serial timing
@@ -65,7 +70,7 @@ int main(void) {
 		gettimeofday(&tv1, NULL); //start parallel timing
 
 
-		s = 10 * comm_size * (log(arr_size)/log(2));//computes the size of the sample array
+		s = min(10 * comm_size * (log(arr_size)/log(2))), arr_size);//computes the size of the sample array
 		
 		samples = malloc(sizeof(long)*s);//allocates samples, now that we have the size
 		
