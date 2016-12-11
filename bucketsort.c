@@ -12,6 +12,7 @@ Authors: Michael Franklin michaelfranklin@sandiego.edu
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include <math.h>
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
@@ -36,10 +37,10 @@ int main(void) {
 	MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 	comm = MPI_COMM_WORLD;
-	
+	setbuf(stdout, NULL);
+	printf("MPI stuff initialized my rank is: %d\n", my_rank);
 	if(my_rank == 0) {
-		printf("Please enter an array size:");
-		arr_size = 0;
+		printf("Please enter an array size:\n");
 		scanf("%d", &arr_size);
 		// gets size of the array from standard input
 		arrSerial = malloc(sizeof(long)*arr_size);
@@ -49,13 +50,13 @@ int main(void) {
 		int i;
 		srand(2);
 		for(i = 0; i < arr_size; i++) {
-			arrSerial[i] = rand();
+		        arrSerial[i] = (rand() % 20);
 			arrParallel[i] = arrSerial[i];
 		}
 		// fills arrays with same random numbers
-		printf("\nSerially sorted: \n");
-   		for(i=0; i<arraySize; i++){
-			printf("%d |", vecSerial[i]);
+		printf("Unsorted:\n");
+		for(i=0; i < arr_size; i++){
+			printf("%ld |", arrSerial[i]);
     		}
 
     		// Sort with serial code
@@ -65,28 +66,40 @@ int main(void) {
     		serialTime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec);
 		
 		//validate sort
-		validateSerialSort(arr_size, arrSerial);
+		//validateSerialSort(arr_size, arrSerial);
+		printf("\nSerially sorted: \n");
+   		for(i=0; i < arr_size; i++){
+			printf("%ld |", arrSerial[i]);
+    		}
+
 		
 		gettimeofday(&tv1, NULL); //start parallel timing
 
 
-		s = min(10 * comm_size * (log(arr_size)/log(2))), arr_size);//computes the size of the sample array
-		
+		s = min((10 * comm_size * (log(arr_size)/log(2))), arr_size);//computes the size of the sample array
+		printf("\ns is: %d\n", s);
 		samples = malloc(sizeof(long)*s);//allocates samples, now that we have the size
-		
-		for(i = 0; i < s; i++) {
-		        samples[i] = arrParallel[rand() % arr_size];
-		}//assigns samples random values from arrParallel
-		mergeSortSerial(0, s - 1, samples, temp);
-		printf("Samples Sorted:/n");
-		for(i = 0; i < s; i++) {
-		  printf("%lu", samples[i]);
+		if(s != arr_size) {
+		        for(i = 0; i < s; i++) {
+		                samples[i] = arrParallel[rand() % arr_size - 1];
+		        }//assigns samples random values from arrParallel
+			mergeSortSerial(0, s - 1, samples, temp);
 		}
-
+		else {
+		  for(i = 0; i < s; i++) {
+		    samples[i] = arrSerial[i];
+		  }
+	        }
+		printf("Samples Sorted:\n");
+		for(i = 0; i < s; i++) {
+		  printf("%ld |", samples[i]);
+		}
+		printf("\n");
 		
 	}//end if statement for process 0
 
-	//MPI_Bcast(arr_size, 1, MPI_INT, 0, comm); 
+	MPI_Bcast(arr_size, 1, MPI_INT, 0, comm);
+	printf("my rank is: %d\n and arr_size is : %d", my_rank, arr_size);
 
 	//firstSubArray = malloc(sizeof(long)*arr_size/comm_size);
 	
@@ -136,31 +149,35 @@ void mergeSortSerial(int l, int r, long * arr, long * temp){
 } /* mergeSortSerial */
 
 void merge(int l, int lm, int m, int r, long * arr, long * temp){
+    int i,j;
+    i = l;
+    j = l;
+
     while(l <= lm && m <= r){
-            if(arr[l] <= arr[m]){
-                temp[m] = arr[l];
-                m++;
-                l++;
-            }
-            else{
-                temp[l]=arr[m];
-                l++;
-                m++;
-            }
+	    if(arr[l] <= arr[m]){
+	        temp[i] = arr[l];
+	        i++;
+	        l++;
+	    }
+	    else{
+	        temp[i]=arr[m];
+	        i++;
+	        m++;
+	    }
     }
     while(l <= lm){
-            temp[m] = arr[l];
-            l++;
-            m++;
+	    temp[i] = arr[l];
+	    l++;
+	    i++;
     }
     while(m <= r){
-            temp[l] = arr[m];
-            m++;
-            l++;
+	    temp[i] = arr[m];
+	    m++;
+	    i++;
     }
 
     int k;
-    for (k = 0; k <= r; k++) {
+    for (k = j; k <= r; k++) {
         arr[k] = temp[k];
     }
     return;
